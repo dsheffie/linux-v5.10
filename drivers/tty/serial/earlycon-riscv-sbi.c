@@ -12,7 +12,10 @@
 
 static void sbi_putc(struct uart_port *port, int c)
 {
-	sbi_console_putchar(c);
+  sbi_console_putchar(c);
+  //while(csr_read(0xc03) != 0) {}
+  //csr_write(0xc03, c);
+
 }
 
 static void sbi_console_write(struct console *con,

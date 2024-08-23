@@ -112,6 +112,7 @@ static void __init setup_initrd(void)
 	/* Ignore the virtul address computed during device tree parsing */
 	initrd_start = initrd_end = 0;
 
+	
 	if (!phys_initrd_size)
 		return;
 	/*
@@ -124,14 +125,16 @@ static void __init setup_initrd(void)
 	size = phys_initrd_size + (phys_initrd_start - start);
 	size = round_up(size, PAGE_SIZE);
 
+	printk(KERN_INFO "phys_initrd_start = %llx, size = %llx\n", (uint64_t)phys_initrd_start, (uint64_t)size);
+	
 	if (!memblock_is_region_memory(start, size)) {
-		pr_err("INITRD: 0x%08llx+0x%08lx is not a memory region",
+		printk(KERN_INFO "INITRD: 0x%08llx+0x%08lx is not a memory region\n",
 		       (u64)start, size);
 		goto disable;
 	}
 
 	if (memblock_is_region_reserved(start, size)) {
-		pr_err("INITRD: 0x%08llx+0x%08lx overlaps in-use memory region\n",
+	  printk(KERN_INFO "INITRD: 0x%08llx+0x%08lx overlaps in-use memory region\n",
 		       (u64)start, size);
 		goto disable;
 	}
@@ -142,11 +145,11 @@ static void __init setup_initrd(void)
 	initrd_end = initrd_start + phys_initrd_size;
 	initrd_below_start_ok = 1;
 
-	pr_info("Initial ramdisk at: 0x%p (%lu bytes)\n",
+	printk(KERN_INFO "Initial ramdisk at: 0x%p (%lu bytes)\n",
 		(void *)(initrd_start), size);
 	return;
 disable:
-	pr_cont(" - disabling initrd\n");
+	printk(KERN_INFO "INITRD BUSTED\n");
 	initrd_start = 0;
 	initrd_end = 0;
 }

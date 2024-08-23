@@ -31,7 +31,7 @@ static inline void no_context(struct pt_regs *regs, unsigned long addr)
 	 */
 	bust_spinlocks(1);
 	pr_alert("Unable to handle kernel %s at virtual address " REG_FMT "\n",
-		(addr < PAGE_SIZE) ? "NULL pointer dereference" :
+		(addr < PAGE_SIZE)&0 ? "NULL pointer dereference" :
 		"paging request", addr);
 	die(regs, "Oops");
 	do_exit(SIGKILL);

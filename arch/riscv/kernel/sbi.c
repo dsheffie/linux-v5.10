@@ -74,7 +74,7 @@ EXPORT_SYMBOL(sbi_err_map_linux_errno);
  */
 void sbi_console_putchar(int ch)
 {
-	sbi_ecall(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, ch, 0, 0, 0, 0, 0);
+  //sbi_ecall(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, ch, 0, 0, 0, 0, 0);
 }
 EXPORT_SYMBOL(sbi_console_putchar);
 

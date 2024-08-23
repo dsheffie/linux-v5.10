@@ -25,6 +25,9 @@
 #include <asm/io.h>
 #include <linux/uaccess.h>
 
+void csr_print(char *buf, int len, int add_nl);
+
+
 #undef TTY_DEBUG_WAIT_UNTIL_SENT
 
 #ifdef TTY_DEBUG_WAIT_UNTIL_SENT
@@ -891,53 +894,61 @@ int tty_perform_flush(struct tty_struct *tty, unsigned long arg)
 }
 EXPORT_SYMBOL_GPL(tty_perform_flush);
 
+
 int n_tty_ioctl_helper(struct tty_struct *tty, struct file *file,
 		       unsigned int cmd, unsigned long arg)
 {
 	int retval;
-
-	switch (cmd) {
-	case TCXONC:
-		retval = tty_check_change(tty);
-		if (retval)
-			return retval;
-		switch (arg) {
-		case TCOOFF:
-			spin_lock_irq(&tty->flow_lock);
-			if (!tty->flow_stopped) {
-				tty->flow_stopped = 1;
-				__stop_tty(tty);
-			}
-			spin_unlock_irq(&tty->flow_lock);
-			break;
-		case TCOON:
-			spin_lock_irq(&tty->flow_lock);
-			if (tty->flow_stopped) {
-				tty->flow_stopped = 0;
-				__start_tty(tty);
-			}
-			spin_unlock_irq(&tty->flow_lock);
-			break;
-		case TCIOFF:
-			if (STOP_CHAR(tty) != __DISABLED_CHAR)
-				retval = tty_send_xchar(tty, STOP_CHAR(tty));
-			break;
-		case TCION:
-			if (START_CHAR(tty) != __DISABLED_CHAR)
-				retval = tty_send_xchar(tty, START_CHAR(tty));
-			break;
-		default:
-			return -EINVAL;
+	char buf[255];
+	sprintf(buf, "n_tty_ioctl_helper with cmd %u (TCXONC=%d, TCFLSH=%d), arg %lu\n", cmd, cmd==TCXONC, cmd==TCFLSH, arg);
+	csr_print(buf, strlen(buf), 0);
+	
+	switch (cmd)
+	  {
+	  case TCXONC:
+	    retval = tty_check_change(tty);
+	    if (retval)
+	      return retval;
+	    switch (arg)
+	      {
+	      case TCOOFF:
+		spin_lock_irq(&tty->flow_lock);
+		if (!tty->flow_stopped) {
+		  tty->flow_stopped = 1;
+		  __stop_tty(tty);
 		}
-		return retval;
-	case TCFLSH:
-		retval = tty_check_change(tty);
-		if (retval)
-			return retval;
-		return __tty_perform_flush(tty, arg);
-	default:
-		/* Try the mode commands */
-		return tty_mode_ioctl(tty, file, cmd, arg);
-	}
+		spin_unlock_irq(&tty->flow_lock);
+		break;
+	      case TCOON:
+		spin_lock_irq(&tty->flow_lock);
+		if (tty->flow_stopped) {
+		  tty->flow_stopped = 0;
+		  __start_tty(tty);
+		}
+		spin_unlock_irq(&tty->flow_lock);
+		break;
+	      case TCIOFF:
+		if (STOP_CHAR(tty) != __DISABLED_CHAR)
+		  retval = tty_send_xchar(tty, STOP_CHAR(tty));
+		break;
+	      case TCION:
+		if (START_CHAR(tty) != __DISABLED_CHAR)
+		  retval = tty_send_xchar(tty, START_CHAR(tty));
+		break;
+	      default:
+		return -EINVAL;
+	      } /* end arg switch */
+	    return retval;
+	  case TCFLSH:
+	    retval = tty_check_change(tty);
+	    if (retval)
+	      return retval;
+	    return __tty_perform_flush(tty, arg);
+	  default:
+	    /* Try the mode commands */
+	    sprintf(buf, "here %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
+	    csr_print(buf,strlen(buf),0);
+	    return tty_mode_ioctl(tty, file, cmd, arg);
+	  }
 }
 EXPORT_SYMBOL(n_tty_ioctl_helper);

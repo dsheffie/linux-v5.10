@@ -180,13 +180,15 @@ static unsigned long __init_memblock memblock_addrs_overlap(phys_addr_t base1, p
 bool __init_memblock memblock_overlaps_region(struct memblock_type *type,
 					phys_addr_t base, phys_addr_t size)
 {
-	unsigned long i;
-
-	for (i = 0; i < type->cnt; i++)
-		if (memblock_addrs_overlap(base, size, type->regions[i].base,
-					   type->regions[i].size))
-			break;
-	return i < type->cnt;
+  unsigned long i;
+  for (i = 0; i < type->cnt; i++) {
+    if (memblock_addrs_overlap(base, size, type->regions[i].base, type->regions[i].size)){
+      printk(KERN_INFO "base %llx with size %llx overlaps base %llx with size %llx\n",
+	     base, size, type->regions[i].base, type->regions[i].size);
+      break;
+    }
+  }
+  return i < type->cnt;
 }
 
 /**
@@ -1748,7 +1750,7 @@ static int __init_memblock memblock_search(struct memblock_type *type, phys_addr
 
 	do {
 		unsigned int mid = (right + left) / 2;
-
+		
 		if (addr < type->regions[mid].base)
 			right = mid;
 		else if (addr >= (type->regions[mid].base +
@@ -1807,6 +1809,15 @@ int __init_memblock memblock_search_pfn_nid(unsigned long pfn,
 bool __init_memblock memblock_is_region_memory(phys_addr_t base, phys_addr_t size)
 {
 	int idx = memblock_search(&memblock.memory, base);
+	struct memblock_region *r;
+	printk(KERN_INFO "%s : %d, base %llx\n",
+	       __PRETTY_FUNCTION__, idx, (uint64_t)base);
+
+	for_each_mem_region(r) {
+	  printk(KERN_INFO ">> region base %llx, size %llx\n",
+		 r->base, r->size);
+	}
+	
 	phys_addr_t end = base + memblock_cap_size(base, &size);
 
 	if (idx == -1)
@@ -1896,7 +1907,7 @@ static void __init_memblock memblock_dump(struct memblock_type *type)
 static void __init_memblock __memblock_dump_all(void)
 {
 	pr_info("MEMBLOCK configuration:\n");
-	pr_info(" memory size = %pa reserved size = %pa\n",
+	printk(KERN_INFO ">>memory size = %pa reserved size = %pa\n",
 		&memblock.memory.total_size,
 		&memblock.reserved.total_size);
 

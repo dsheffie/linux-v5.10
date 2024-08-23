@@ -482,7 +482,7 @@ static char * __init unpack_to_rootfs(char *buf, unsigned long len)
 		}
 		this_header = 0;
 		decompress = decompress_method(buf, len, &compress_name);
-		pr_debug("Detected %s compressed data\n", compress_name);
+		printk(KERN_INFO "Detected %s compressed data\n", compress_name);
 		if (decompress) {
 			int res = decompress(buf, len, NULL, flush_buffer, NULL,
 				   &my_inptr, error);
@@ -495,8 +495,9 @@ static char * __init unpack_to_rootfs(char *buf, unsigned long len)
 					 compress_name);
 				message = msg_buf;
 			}
-		} else
+		} else {
 			error("invalid magic at start of compressed archive");
+		}
 		if (state != Reset)
 			error("junk at the end of compressed archive");
 		this_header = saved_offset + my_inptr;

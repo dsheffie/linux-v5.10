@@ -5,6 +5,10 @@
 
 menu "Misc devices"
 
+config CSR_CONSOLE
+       tristate "CSR console for RISCV"
+       depends on RISCV
+
 config SENSORS_LIS3LV02D
 	tristate
 	depends on INPUT

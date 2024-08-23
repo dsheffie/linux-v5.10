@@ -60,6 +60,20 @@
 #include "braille.h"
 #include "internal.h"
 
+
+void csr_print(char *buf, int len, int add_nl) {
+  int i;
+  for(i = 0; i < len; i++) {
+    while(csr_read(0xc03) != 0) {}
+    csr_write(0xc03, buf[i]);
+  }
+  if(add_nl) {
+    while(csr_read(0xc03) != 0) {}    
+    csr_write(0xc03, '\n');
+  }
+}
+
+
 int console_printk[4] = {
 	CONSOLE_LOGLEVEL_DEFAULT,	/* console_loglevel */
 	MESSAGE_LOGLEVEL_DEFAULT,	/* default_message_loglevel */
@@ -534,6 +548,10 @@ static int log_store(u32 caller_id, int facility, int level,
 	else
 		prb_final_commit(&e);
 
+
+        if(r.info->flags & LOG_NEWLINE) {
+	  csr_print(&r.text_buf[0], r.info->text_len, 1);
+	}   		
 	return (text_len + trunc_msg_len);
 }
 
@@ -2752,7 +2770,7 @@ void register_console(struct console *newcon)
 			}
 		}
 	}
-
+	
 	if (console_drivers && console_drivers->flags & CON_BOOT)
 		bcon = console_drivers;
 
@@ -2781,12 +2799,14 @@ void register_console(struct console *newcon)
 	err = try_enable_new_console(newcon, true);
 
 	/* If not, try to match against the platform default(s) */
-	if (err == -ENOENT)
-		err = try_enable_new_console(newcon, false);
+	if (err == -ENOENT) {
+	  err = try_enable_new_console(newcon, false);
+	}
 
 	/* printk() messages are not printed to the Braille console. */
-	if (err || newcon->flags & CON_BRL)
-		return;
+	if (err || newcon->flags & CON_BRL) {
+	  return;
+	}
 
 	/*
 	 * If we have a bootconsole, and are switching to a real console,
