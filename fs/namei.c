@@ -3223,7 +3223,7 @@ static int do_open(struct nameidata *nd,
 	if (!(file->f_mode & FMODE_CREATED))
 		audit_inode(nd->name, nd->path.dentry, 0);
 	if (open_flag & O_CREAT) {
-		if ((open_flag & O_EXCL) && !(file->f_mode & FMODE_CREATED))
+		if ((open_flag & O_EXCL) && !(file->f_mode & FMODE_CREATED)) 
 			return -EEXIST;
 		if (d_is_dir(nd->path.dentry))
 			return -EISDIR;
@@ -3242,24 +3242,31 @@ static int do_open(struct nameidata *nd,
 		open_flag &= ~O_TRUNC;
 		acc_mode = 0;
 	} else if (d_is_reg(nd->path.dentry) && open_flag & O_TRUNC) {
-		error = mnt_want_write(nd->path.mnt);
+	  error = mnt_want_write(nd->path.mnt);
+
 		if (error)
 			return error;
 		do_truncate = true;
 	}
 	error = may_open(&nd->path, acc_mode, open_flag);
-	if (!error && !(file->f_mode & FMODE_OPENED))
+
+	
+	if (!error && !(file->f_mode & FMODE_OPENED)) 
 		error = vfs_open(&nd->path, file);
+	
 	if (!error)
 		error = ima_file_check(file, op->acc_mode);
+
 	if (!error && do_truncate)
 		error = handle_truncate(file);
+	
 	if (unlikely(error > 0)) {
 		WARN_ON(1);
 		error = -EINVAL;
 	}
 	if (do_truncate)
 		mnt_drop_write(nd->path.mnt);
+
 	return error;
 }
 
@@ -3351,10 +3358,11 @@ static struct file *path_openat(struct nameidata *nd,
 {
 	struct file *file;
 	int error;
-
+	
 	file = alloc_empty_file(op->open_flag, current_cred());
-	if (IS_ERR(file))
-		return file;
+	if (IS_ERR(file)) {
+	  return file;
+	}
 
 	if (unlikely(file->f_flags & __O_TMPFILE)) {
 		error = do_tmpfile(nd, flags, op, file);
@@ -3362,26 +3370,36 @@ static struct file *path_openat(struct nameidata *nd,
 		error = do_o_path(nd, flags, file);
 	} else {
 		const char *s = path_init(nd, flags);
+		//printk(KERN_INFO "->here %s:%d, s = %s\n", __PRETTY_FUNCTION__, __LINE__, s);
+		
 		while (!(error = link_path_walk(s, nd)) &&
 		       (s = open_last_lookups(nd, file, op)) != NULL)
 			;
+		
+		//printk(KERN_INFO "->here %s:%d, err no dev = %d\n", __PRETTY_FUNCTION__, __LINE__, error);
+		
 		if (!error)
 			error = do_open(nd, file, op);
+
+		//printk(KERN_INFO "->here %s:%d, err no dev = %d\n", __PRETTY_FUNCTION__, __LINE__, error);	
 		terminate_walk(nd);
 	}
 	if (likely(!error)) {
-		if (likely(file->f_mode & FMODE_OPENED))
-			return file;
-		WARN_ON(1);
-		error = -EINVAL;
+	  if (likely(file->f_mode & FMODE_OPENED)) {
+	    return file;
+	  }
+	  WARN_ON(1);
+	  error = -EINVAL;
 	}
 	fput(file);
+
 	if (error == -EOPENSTALE) {
 		if (flags & LOOKUP_RCU)
 			error = -ECHILD;
 		else
 			error = -ESTALE;
 	}
+	//printk(KERN_INFO "->here %s:%d, err no dev = %d\n", __PRETTY_FUNCTION__, __LINE__, error);	
 	return ERR_PTR(error);
 }
 
@@ -3394,10 +3412,13 @@ struct file *do_filp_open(int dfd, struct filename *pathname,
 
 	set_nameidata(&nd, dfd, pathname);
 	filp = path_openat(&nd, op, flags | LOOKUP_RCU);
-	if (unlikely(filp == ERR_PTR(-ECHILD)))
+	
+	if (unlikely(filp == ERR_PTR(-ECHILD))) {
 		filp = path_openat(&nd, op, flags);
-	if (unlikely(filp == ERR_PTR(-ESTALE)))
+	}
+	if (unlikely(filp == ERR_PTR(-ESTALE))) {
 		filp = path_openat(&nd, op, flags | LOOKUP_REVAL);
+	}
 	restore_nameidata();
 	return filp;
 }

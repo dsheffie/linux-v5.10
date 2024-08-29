@@ -40,7 +40,7 @@ endif
 riscv-march-$(CONFIG_ARCH_RV32I)	:= rv32ima
 riscv-march-$(CONFIG_ARCH_RV64I)	:= rv64ima_zicsr_zifencei
 riscv-march-$(CONFIG_FPU)		:= $(riscv-march-y)fd
-riscv-march-$(CONFIG_RISCV_ISA_C)	:= rv64ima_zicsr_zifencei 
+riscv-march-$(CONFIG_RISCV_ISA_C)	:= rv64ima_zicsr_zifencei
 KBUILD_CFLAGS += -march=$(subst fd,,$(riscv-march-y))
 KBUILD_AFLAGS += -march=$(riscv-march-y)
 
@@ -86,9 +86,10 @@ vdso_install:
 ifeq ($(CONFIG_RISCV_M_MODE)$(CONFIG_SOC_KENDRYTE),yy)
 KBUILD_IMAGE := $(boot)/loader.bin
 else
-KBUILD_IMAGE := $(boot)/Image.gz
+KBUILD_IMAGE := $(boot)/Image
 endif
-BOOT_TARGETS := Image Image.gz loader loader.bin
+BOOT_TARGETS := Image loader loader.bin
+
 
 all:	$(notdir $(KBUILD_IMAGE))
 

@@ -766,13 +766,13 @@ static int do_dentry_open(struct file *f,
 {
 	static const struct file_operations empty_fops = {};
 	int error;
-
+	
 	path_get(&f->f_path);
 	f->f_inode = inode;
 	f->f_mapping = inode->i_mapping;
 	f->f_wb_err = filemap_sample_wb_err(f->f_mapping);
 	f->f_sb_err = file_sample_sb_err(f);
-
+	
 	if (unlikely(f->f_flags & O_PATH)) {
 		f->f_mode = FMODE_PATH | FMODE_OPENED;
 		f->f_op = &empty_fops;
@@ -800,23 +800,28 @@ static int do_dentry_open(struct file *f,
 		error = -ENODEV;
 		goto cleanup_all;
 	}
-
+	
 	error = security_file_open(f);
-	if (error)
-		goto cleanup_all;
-
+	if (error){
+	  goto cleanup_all;
+	}
+	
 	error = break_lease(locks_inode(f), f->f_flags);
-	if (error)
-		goto cleanup_all;
+	if (error) {
+	  goto cleanup_all;
+	}
 
+	//printk(KERN_INFO "->here %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
+	
 	/* normally all 3 are set; ->open() can clear them if needed */
 	f->f_mode |= FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE;
 	if (!open)
-		open = f->f_op->open;
+	  open = f->f_op->open;
 	if (open) {
 		error = open(inode, f);
-		if (error)
-			goto cleanup_all;
+		if (error) {
+		  goto cleanup_all;
+		}
 	}
 	f->f_mode |= FMODE_OPENED;
 	if ((f->f_mode & (FMODE_READ | FMODE_WRITE)) == FMODE_READ)
@@ -1105,12 +1110,15 @@ inline int build_open_flags(const struct open_how *how, struct open_flags *op)
  */
 struct file *file_open_name(struct filename *name, int flags, umode_t mode)
 {
-	struct open_flags op;
-	struct open_how how = build_open_how(flags, mode);
-	int err = build_open_flags(&how, &op);
-	if (err)
-		return ERR_PTR(err);
-	return do_filp_open(AT_FDCWD, name, &op);
+  struct open_flags op;
+  struct open_how how = build_open_how(flags, mode);
+  int err = build_open_flags(&how, &op);
+  
+  if (err)
+    return ERR_PTR(err);
+  
+  
+  return do_filp_open(AT_FDCWD, name, &op);
 }
 
 /**
@@ -1133,6 +1141,7 @@ struct file *filp_open(const char *filename, int flags, umode_t mode)
 		file = file_open_name(name, flags, mode);
 		putname(name);
 	}
+	
 	return file;
 }
 EXPORT_SYMBOL(filp_open);
