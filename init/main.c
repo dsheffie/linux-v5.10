@@ -1338,7 +1338,7 @@ static void __init do_pre_smp_initcalls(void)
 static int run_init_process(const char *init_filename)
 {
 	const char *const *p;
-
+	u64 icnt;
 	argv_init[0] = init_filename;
 	pr_info("Run %s as init process\n", init_filename);
 	pr_debug("  with arguments:\n");
@@ -1346,7 +1346,9 @@ static int run_init_process(const char *init_filename)
 		pr_debug("    %s\n", *p);
 	pr_debug("  with environment:\n");
 	for (p = envp_init; *p; p++)
-		pr_debug("    %s\n", *p);
+	  pr_debug("    %s\n", *p);
+	icnt = csr_read(CSR_INSTRET);
+	pr_info("linux boot took %lu instructions\n", icnt);
 	return kernel_execve(init_filename, argv_init, envp_init);
 }
 
